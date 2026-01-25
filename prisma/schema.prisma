@@ -1,0 +1,42 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model WebhookEvent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  
+  source    String
+  
+  payload   Json
+  
+  headers   Json
+  
+  status    EventStatus @default(PENDING)
+  
+  attempts  DeliveryAttempt[]
+}
+
+model DeliveryAttempt {
+  id             String       @id @default(uuid())
+  webhookEventId String
+  webhookEvent   WebhookEvent @relation(fields: [webhookEventId], references: [id])
+  
+  timestamp      DateTime     @default(now())
+  
+  responseStatus Int
+
+  responseBody   String?
+}
+
+enum EventStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
