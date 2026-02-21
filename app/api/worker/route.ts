@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { NextResponse, NextRequest } from 'next/server';
 
-const DESTINATION_URL = 'https://webhook.site/739e99ac-39fd-40c1-9c10-d4025960bb3b'; 
+const DESTINATION_URL = 'https://webhook.site/a989e004-829f-47ae-97bd-20f8019b52a4'; 
 
 export async function POST(request: NextRequest) {
   try {

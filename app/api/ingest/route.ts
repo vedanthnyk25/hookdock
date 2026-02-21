@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma"
 import {Client} from "@upstash/qstash";
+import { getProvider } from "@/lib/providers/factory";
 
 const qstash = new Client({
   token: process.env.QSTASH_TOKEN!,
 });
 
-// We define a named export for the HTTP method we want to support (POST)
 export async function POST(req: NextRequest) {
   try {
-    // 1. Parse the incoming JSON body
+    
     const body = await req.json();
 
     if (!body) {
@@ -19,7 +19,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const searchParams= req.nextUrl.searchParams
+    const source= searchParams.get("source") || "none";
+
+    const provider= getProvider(source);
     const headers= Object.fromEntries(req.headers.entries());
+
+    const isValid= await provider.verify(body, headers);
+
+    if (!isValid) {
+      console.warn(`Blocked unauthorized request from source: ${source}`);
+      return NextResponse.json({ error: "Unauthorized: Invalid Signature" }, { status: 401 });
+    }
 
     // Store the webhook event in the database
     const webhookEvent = await prisma.webhookEvent.create({
