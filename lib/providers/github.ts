@@ -6,7 +6,7 @@ export class GitHubProvider implements WebhookProvider {
 
   providerId = "github";
 
-  async verify(body: any, headers: any): Promise<boolean> {
+  async verify(body: any, headers: any, secret: string): Promise<boolean> {
     
     const signature= headers["x-hub-signature-256"];
 
@@ -14,7 +14,7 @@ export class GitHubProvider implements WebhookProvider {
 
     const WEBHOOK_SECRET= process.env.WEBHOOK_SECRET || "";
 
-    const hmac= crypto.createHmac("sha256", WEBHOOK_SECRET);
+    const hmac= crypto.createHmac("sha256", secret);
     hmac.update(JSON.stringify(body));
 
     const calculated = `sha256=${hmac.digest("hex")}`;

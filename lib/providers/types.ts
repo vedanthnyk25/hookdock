@@ -11,6 +11,6 @@ export interface WebhookProvider {
    * Validates the incoming request (HMAC signature check)
    * Returns true if valid, false if forged.
    */
-  verify(body: any, headers: any): Promise<boolean>;
+  verify(body: any, headers: any, secret: string): Promise<boolean>;
 }
 

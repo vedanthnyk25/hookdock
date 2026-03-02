@@ -2,13 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma"
 import {Client} from "@upstash/qstash";
 import { getProvider } from "@/lib/providers/factory";
+import { error } from "console";
 
 const qstash = new Client({
   token: process.env.QSTASH_TOKEN!,
 });
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest,
+  { params }: { params: { endpointId: string } }
+) {
+
+  const { endpointId } = await params;
   try {
+
+    const endpoint= await prisma.webhookEndpoint.findUnique({
+      where: {id:endpointId},
+    });
+
+    if(!endpoint){
+      return NextResponse.json({error: "Endpoint not found"}, {status: 404});
+    }
     
     const body = await req.json();
 
@@ -19,26 +32,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const searchParams= req.nextUrl.searchParams
-    const source= searchParams.get("source") || "none";
-
-    const provider= getProvider(source);
+    const provider= getProvider(endpoint.provider);
     const headers= Object.fromEntries(req.headers.entries());
 
-    const isValid= await provider.verify(body, headers);
+    const isValid= await provider.verify(body, headers, endpoint.secret || "");
 
     if (!isValid) {
-      console.warn(`Blocked unauthorized request from source: ${source}`);
+      console.warn(`Blocked unauthorized request from endpoint: ${endpointId}`);
       return NextResponse.json({ error: "Unauthorized: Invalid Signature" }, { status: 401 });
     }
 
     // Store the webhook event in the database
     const webhookEvent = await prisma.webhookEvent.create({
       data: {
-        source: body.source || "unknown",
+        endpointId:endpointId,
         payload: body,
         headers: headers,
-        status: "PENDING", 
+        status: "PENDING",
       }
     });
 

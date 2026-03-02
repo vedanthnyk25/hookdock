@@ -1,8 +1,6 @@
 import prisma from '@/lib/prisma';
 import { NextResponse, NextRequest } from 'next/server';
 
-const DESTINATION_URL = 'https://webhook.site/a989e004-829f-47ae-97bd-20f8019b52a4'; 
-
 export async function POST(request: NextRequest) {
   try {
   
@@ -16,11 +14,14 @@ export async function POST(request: NextRequest) {
     // Database Lookup: Get the payload
     const webhookEvent = await prisma.webhookEvent.findUnique({
       where: { id: eventId },
+      include: {endpoint: true},
     });
 
-    if (!webhookEvent) {
-      return NextResponse.json({ error: 'Webhook event not found' }, { status: 404 });
+    if (!webhookEvent || !webhookEvent.endpoint) {
+      return NextResponse.json({ error: 'Webhook event or endpoint not found' }, { status: 404 });
     }
+
+    const DESTINATION_URL= webhookEvent.endpoint.targetUrl;
 
     // Execution: Send the webhook to the destination
     const start = Date.now();

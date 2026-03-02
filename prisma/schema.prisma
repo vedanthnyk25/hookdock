@@ -8,16 +8,28 @@ datasource db {
   provider = "postgresql"
 }
 
+model WebhookEndpoint {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  description String?
+  targetUrl   String
+  
+  secret      String
+  provider    String
+  
+  events    WebhookEvent[]
+}
+
 model WebhookEvent {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   
-  source    String
+  endpointId String
+  endpoint   WebhookEndpoint @relation(fields: [endpointId], references: [id])
   
   payload   Json
-  
   headers   Json
-  
   status    EventStatus @default(PENDING)
   
   attempts  DeliveryAttempt[]
