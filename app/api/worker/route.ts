@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const DESTINATION_URL= webhookEvent.endpoint.targetUrl;
+    //const DESTINATION_URL = "http://localhost:9999/broken";
 
     // Execution: Send the webhook to the destination
     const start = Date.now();
